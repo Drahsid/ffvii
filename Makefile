@@ -108,7 +108,7 @@ assets: $(TEMP_DIR)/disk101.iso $(TEMP_DIR)/disk201.iso $(TEMP_DIR)/disk301.iso
 	@echo extracting assets
 	$(PYTHON) extract_assets.py > /dev/null
 
-ifeq (,$(wildcard $(TARGET_BOOT)))
+ifeq (,$(wildcard $(GAMEBIN_DIR)/$(BOOT_BASENAME)))
 setup: $(BOOT_BASENAME).yaml assets
 	rm -rf $(TEMP_DIR)
 else
