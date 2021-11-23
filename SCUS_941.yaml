@@ -2,7 +2,7 @@ options:
   platform:     psx
   basename:     SCUS_941
   base_path:    .
-  target_path:  SCUS_941/SCUS_941
+  target_path:  SCUS_941/common/SCUS_941
   asm_path:     asm/boot
   asset_path:   assets/boot
   src_path:     src/boot

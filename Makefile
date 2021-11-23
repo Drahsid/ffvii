@@ -1,11 +1,14 @@
 BOOT_BASENAME   := SCUS_941
 COMMON_BASENAME	:= common
 
+BASE_DIR		:= base
 BUILD_DIR       := build
 TOOLS_DIR       := tools
 
 TARGET_BOOT		:= $(BUILD_DIR)/$(BOOT_BASENAME)
 GAMEBIN_DIR		:= $(BOOT_BASENAME)
+
+TEMP_DIR		:= temp
 
 # boot loader (identical on all disks, SCUS_941.63, SCUS_941.64, SCUS_941.65)
 ASM_BOOT_DIR	:= asm/boot asm/boot/data
@@ -62,6 +65,8 @@ CC_PSYQ_43      := $(WINE) $(TOOLS_DIR)/psyq/4.3/CC1PSX.EXE # 2.8.1 SN32
 CC_PSYQ_46      := $(WINE) $(TOOLS_DIR)/psyq/4.6/CC1PSX.EXE # 2.95
 CC              := $(CC_272)
 SPLAT           := $(PYTHON) $(TOOLS_DIR)/splat/split.py
+BCHUNK			:= bchunk
+7Z				:= 7z
 
 # Flags
 OPT_FLAGS       := -O2
@@ -80,12 +85,35 @@ all: dirs $(TARGET_BOOT) check
 
 check: $(TARGET_BOOT)
 	@echo "$$(cat $(GAMEBIN_DIR)/$(BOOT_BASENAME).sha1) $<" | sha1sum --check
-	@touch $@
 
 dirs:
 	$(foreach dir,$(ALL_ASM_DIRS) $(ALL_C_DIRS) $(ALL_BIN_DIRS),$(shell mkdir -p $(BUILD_DIR)/$(dir)))
 
+setup_diskdirs:
+	mkdir -p $(TEMP_DIR)
+
+$(TEMP_DIR)/disk101.iso: setup_diskdirs
+	@echo merging disk 1...
+	$(BCHUNK) $(BASE_DIR)/ffvii1.bin $(BASE_DIR)/ffvii1.cue $(TEMP_DIR)/disk1 > /dev/null
+
+$(TEMP_DIR)/disk201.iso: setup_diskdirs
+	@echo merging disk 2...
+	$(BCHUNK) $(BASE_DIR)/ffvii2.bin $(BASE_DIR)/ffvii2.cue $(TEMP_DIR)/disk2  > /dev/null
+
+$(TEMP_DIR)/disk301.iso: setup_diskdirs
+	@echo merging disk 3...
+	$(BCHUNK) $(BASE_DIR)/ffvii3.bin $(BASE_DIR)/ffvii3.cue $(TEMP_DIR)/disk3  > /dev/null
+
+assets: $(TEMP_DIR)/disk101.iso $(TEMP_DIR)/disk201.iso $(TEMP_DIR)/disk301.iso
+	@echo extracting assets
+	$(PYTHON) extract_assets.py > /dev/null
+
+ifeq (,$(wildcard $(TARGET_BOOT)))
+setup: $(BOOT_BASENAME).yaml assets
+	rm -rf $(TEMP_DIR)
+else
 setup: $(BOOT_BASENAME).yaml
+endif
 	$(SPLAT) $(BOOT_BASENAME).yaml
 
 clean:
@@ -97,6 +125,12 @@ nuke:
 	rm -rf $(BUILD_DIR)
 	rm -rf *auto*.txt
 	rm -rf *.ld
+
+ubernuke: nuke
+	rm -rf $(GAMEBIN_DIR)/common
+	rm -rf $(GAMEBIN_DIR)/disk1
+	rm -rf $(GAMEBIN_DIR)/disk2
+	rm -rf $(GAMEBIN_DIR)/disk3
 
 # bootloader
 $(TARGET_BOOT): $(TARGET_BOOT).elf

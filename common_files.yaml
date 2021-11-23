@@ -1,0 +1,20 @@
+# basic options
+options:
+  disks: [temp/disk101.iso, temp/disk201.iso, temp/disk301.iso]
+  uncommon_dirs: [SCUS_941/disk1, SCUS_941/disk2, SCUS_941/disk3]
+  common_dir: SCUS_941/common
+
+# files and folders that are mutually uncommon between disks
+common_uncommon:
+  - [FIELD, file, TUNNEL_6.MIM]
+  - [MINT, dir]
+  - [MOVIE, dir]
+  - [__root__, file, SYSTEM.CNF]
+
+# specific files and folders that are uniquely uncommon
+uncommon:
+  - [2, SNOVA, dir]
+
+# common files that should be moved/renamed
+common:
+  - [__root__, SCUS_941.63, SCUS_941, file] # we are using disk 1 as the common disk, so let's assume SCUS_941.63 is the bootloader
