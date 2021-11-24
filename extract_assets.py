@@ -50,11 +50,15 @@ for data in common_files["common_uncommon"]:
         ignorelist += " -xr!" + path + "*"
 
 for data in common_files["uncommon"]:
-    file = data[1]
+    path = data[1]
+
+    if path != "":
+        path = path + "/"
+
     if data[2] == "file":
-        ignorelist += " -x!" + file
+        ignorelist += " -x!" + path + data[3]
     elif data[2] == "dir":
-        ignorelist += " -xr!" + file + "/*"
+        ignorelist += " -xr!" + path + "*"
 
 for data in common_files["common"]:
     path = data[0]
@@ -69,7 +73,6 @@ for data in common_files["common"]:
 
 ## Extract common files
 print("Extracting common files")
-print("7z x -y " + disk + " -o" + common_dir + " " + ignorelist)
 DoExtract("x -y " + disk + " -o" + common_dir + " " + ignorelist)
 
 for data in common_files["common"]:
@@ -120,7 +123,7 @@ for data in common_files["uncommon"]:
     path = "/" + path
 
     if not os.path.exists(common_files["options"]["uncommon_dirs"][index] + path):
-            os.mkdir(common_files["options"]["uncommon_dirs"][index] + path)
+        os.mkdir(common_files["options"]["uncommon_dirs"][index] + path)
 
     if data[2] == "file":
         DoExtract("e " + disk + " -o" + common_files["options"]["uncommon_dirs"][index] + path + " " + imgpath + data[3])
