@@ -1,4 +1,5 @@
 BOOT_BASENAME   := SCUS_941
+KERNEL_BASENAME := kernel
 COMMON_BASENAME	:= common
 
 BASE_DIR		:= base
@@ -6,6 +7,7 @@ BUILD_DIR       := build
 TOOLS_DIR       := tools
 
 TARGET_BOOT		:= $(BUILD_DIR)/$(BOOT_BASENAME)
+TARGET_KERNEL	:= $(BUILD_DIR)/$(KERNEL_BASENAME)
 GAMEBIN_DIR		:= $(BOOT_BASENAME)
 
 TEMP_DIR		:= temp
@@ -27,6 +29,23 @@ O_BOOT_FILES	:= $(foreach file,$(S_BOOT_FILES),$(BUILD_DIR)/$(file).o) \
 					$(foreach file,$(C_BOOT_FILES),$(BUILD_DIR)/$(file).o) \
 					$(foreach file,$(BIN_BOOT_FILES),$(BUILD_DIR)/$(file).o)
 
+# KERNEL.bin (identical on all disks)
+ASM_$(KERNEL_BASENAME)_DIR		:= asm/$(KERNEL_BASENAME)
+C_$(KERNEL_BASENAME)_DIR		:= src/$(KERNEL_BASENAME)
+ASSETS_$(KERNEL_BASENAME)_DIR	:= assets/$(KERNEL_BASENAME)
+
+ASM_$(KERNEL_BASENAME)_DIRS		:= $(ASM_$(KERNEL_BASENAME)_DIR) $(ASM_$(KERNEL_BASENAME)_DIR)/data
+C_$(KERNEL_BASENAME)_DIRS		:= $(C_$(KERNEL_BASENAME)_DIR)
+BIN_$(KERNEL_BASENAME)_DIRS		:= $(ASSETS_$(KERNEL_BASENAME)_DIR)
+
+S_$(KERNEL_BASENAME)_FILES		:= $(foreach dir,$(ASM_$(KERNEL_BASENAME)_DIRS),$(wildcard $(dir)/*.s))
+C_$(KERNEL_BASENAME)_FILES		:= $(foreach dir,$(C_$(KERNEL_BASENAME)_DIRS),$(wildcard $(dir)/*.c))
+BIN_$(KERNEL_BASENAME)_FILES	:= $(foreach dir,$(BIN_$(KERNEL_BASENAME)_DIRS),$(wildcard $(dir)/*.bin))
+
+O_$(KERNEL_BASENAME)_FILES		:= $(foreach file,$(S_$(KERNEL_BASENAME)_FILES),$(BUILD_DIR)/$(file).o) \
+									$(foreach file,$(C_$(KERNEL_BASENAME)_FILES),$(BUILD_DIR)/$(file).o) \
+									$(foreach file,$(BIN_$(KERNEL_BASENAME)_FILES),$(BUILD_DIR)/$(file).o)
+
 # common (here for example)
 ASM_$(COMMON_BASENAME)_DIR		:= asm/$(COMMON_BASENAME)
 C_$(COMMON_BASENAME)_DIR		:= src/$(COMMON_BASENAME)
@@ -45,10 +64,10 @@ O_$(COMMON_BASENAME)_FILES		:= $(foreach file,$(S_$(COMMON_BASENAME)_FILES),$(BU
 									$(foreach file,$(BIN_$(COMMON_BASENAME)_FILES),$(BUILD_DIR)/$(file).o)
 
 # batch
-ALL_ASM_DIRS	:= $(ASM_BOOT_DIRS) $(ASM_$(COMMON_BASENAME)_DIRS)
-ALL_C_DIRS		:= $(C_BOOT_DIRS) $(C_$(COMMON_BASENAME)_DIRS)
-ALL_BIN_DIRS	:= $(BIN_BOOT_DIRS) $(BIN_$(COMMON_BASENAME)_DIRS)
-ALL_ASSETS_DIRS	:= $(ASSETS_BOOT_DIR) $(ASSETS_$(COMMON_BASENAME)_DIR)
+ALL_ASM_DIRS	:= $(ASM_BOOT_DIRS) $(ASM_$(COMMON_BASENAME)_DIRS) #$(ASM_$(KERNEL_BASENAME)_DIRS)
+ALL_C_DIRS		:= $(C_BOOT_DIRS) $(C_$(COMMON_BASENAME)_DIRS) #$(C_$(KERNEL_BASENAME)_DIRS)
+ALL_BIN_DIRS	:= $(BIN_BOOT_DIRS) $(BIN_$(COMMON_BASENAME)_DIRS) #$(BIN_$(KERNEL_BASENAME)_DIRS)
+ALL_ASSETS_DIRS	:= $(ASSETS_BOOT_DIR) $(ASSETS_$(COMMON_BASENAME)_DIR) #$(ASSETS_$(KERNEL_BASENAME)_DIR)
 
 # TOOLS
 PYTHON          := python3
@@ -109,12 +128,13 @@ assets: $(TEMP_DIR)/disk101.iso $(TEMP_DIR)/disk201.iso $(TEMP_DIR)/disk301.iso
 	$(PYTHON) extract_assets.py > /dev/null
 
 ifeq (,$(wildcard $(GAMEBIN_DIR)/$(BOOT_BASENAME)))
-setup: $(BOOT_BASENAME).yaml assets
+setup: $(GAMEBIN_DIR)/$(BOOT_BASENAME).yaml assets
 	rm -rf $(TEMP_DIR)
 else
-setup: $(BOOT_BASENAME).yaml
+setup: $(GAMEBIN_DIR)/$(BOOT_BASENAME).yaml
 endif
-	$(SPLAT) $(BOOT_BASENAME).yaml
+	$(SPLAT) $(GAMEBIN_DIR)/$(BOOT_BASENAME).yaml
+#	$(SPLAT) $(GAMEBIN_DIR)/$(KERNEL_BASENAME).yaml
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -123,8 +143,8 @@ nuke:
 	rm -rf asm
 	rm -rf assets
 	rm -rf $(BUILD_DIR)
-	rm -rf *auto*.txt
-	rm -rf *.ld
+	rm -rf $(GAMEBIN_DIR)/*auto*.txt
+	rm -rf $(GAMEBIN_DIR)/*.ld
 
 ubernuke: nuke
 	rm -rf $(GAMEBIN_DIR)/common
@@ -137,7 +157,7 @@ $(TARGET_BOOT): $(TARGET_BOOT).elf
 	$(OBJCOPY) $(OBJCOPY_FLAGS) $< $@
 
 $(TARGET_BOOT).elf: $(O_BOOT_FILES)
-	$(LD) -Map $(BUILD_DIR)/$(BOOT_BASENAME).map -T $(BOOT_BASENAME).ld -T undefined_syms_auto.$(BOOT_BASENAME).txt -T undefined_funcs_auto.$(BOOT_BASENAME).txt -T undefined_syms.$(BOOT_BASENAME).txt --no-check-sections -o $@
+	$(LD) -Map $(BUILD_DIR)/$(BOOT_BASENAME).map -T $(GAMEBIN_DIR)/$(BOOT_BASENAME).ld -T $(GAMEBIN_DIR)/undefined_syms_auto.$(BOOT_BASENAME).txt -T $(GAMEBIN_DIR)/undefined_funcs_auto.$(BOOT_BASENAME).txt -T $(GAMEBIN_DIR)/undefined_syms.$(BOOT_BASENAME).txt --no-check-sections -o $@
 
 # generate objects
 $(BUILD_DIR)/%.i: %.c

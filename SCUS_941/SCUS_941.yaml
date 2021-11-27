@@ -2,19 +2,20 @@ options:
   platform:     psx
   basename:     SCUS_941
   base_path:    .
-  target_path:  SCUS_941/common/SCUS_941
-  asm_path:     asm/boot
+  target_path:  common/SCUS_941
+  asm_path:     ../asm/boot
   asset_path:   assets/boot
-  src_path:     src/boot
+  src_path:     ../src/boot
   # compiler
   compiler: GCC
   # disasm/linker
   symbol_addrs_path:    symbol_addrs.SCUS_941.txt
   undefined_syms_path:  undefined_syms.SCUS_941.txt
-  undefined_funcs_auto_path: undefined_funcs_auto.SCUS_941.txt
-  undefined_syms_auto_path: undefined_syms_auto.SCUS_941.txt
+  undefined_funcs_auto_path:  undefined_funcs_auto.SCUS_941.txt
+  undefined_syms_auto_path:   undefined_syms_auto.SCUS_941.txt
   find_file_boundaries: yes
   enable_ld_alignment_hack: yes
+  use_legacy_include_asm: False
 segments:
   - [0x0, header]    # data?
   - [0x84, bin]      # zero padding

@@ -1,0 +1,26 @@
+# TODO: un bingz the fi le before splitting it
+options:
+  platform:     psx
+  basename:     KERNEL
+  base_path:    .
+  target_path:  common/INIT/KERNEL.bin
+  asm_path:     ../asm/kernel
+  asset_path:   ../assets/kernel
+  src_path:     ../src/kernel
+  # compiler
+  compiler: GCC
+  # disasm/linker
+  symbol_addrs_path:    symbol_addrs.KERNEL.txt
+  undefined_syms_path:  undefined_syms.KERNEL.txt
+  undefined_funcs_auto_path:  undefined_funcs_auto.KERNEL.txt
+  undefined_syms_auto_path:   undefined_syms_auto.KERNEL.txt
+  find_file_boundaries: yes
+  use_legacy_include_asm: False
+segments:
+  - [0x0, bin] # binzgip header?
+  - name: main
+    type: code
+    start: 0x00000010
+    subsegments:
+      - [0x10, bin]
+  - [0x5768]
